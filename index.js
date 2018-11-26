@@ -5,6 +5,7 @@ const client = require('mongodb').MongoClient;
 const fs = require('fs');
 const ps = require('ps-node');
 const debug = Debug('mongo-unit');
+const mongoose = require('mongoose');
 
 const dataFolder = '/.mongo-unit';
 const defaultTempDir = __dirname + dataFolder;
@@ -77,6 +78,11 @@ function load(data) {
   return client.connect(getUrl()).then(db => {
     const queries = Object.keys(data).map(col => {
       const collection = db.collection(col);
+      data[col].map((item, i) => {
+        if (data[col][i]._id) {
+          data[col][i]._id = new mongoose.mongo.ObjectId(data[col][i]._id);
+        }
+      });
       return collection.insert(data[col]);
     });
     return Promise.all(queries).then(() => db.close());
@@ -159,6 +165,11 @@ function initDb(url, data) {
   return client.connect(url).then(db => {
     const requests = Object.keys(data).map(col => {
       const collection = db.collection(col);
+      data[col].map((item, i) => {
+        if (data[col][i]._id) {
+          data[col][i]._id = new mongoose.mongo.ObjectId(data[col][i]._id);
+        }
+      });
       return collection.insert(data[col]);
     });
     return Promise.all(requests);
